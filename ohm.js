@@ -6,6 +6,8 @@ let voltbar = document.getElementById('dcv');
 let ampr = document.getElementById('i');
 let vfr = document.getElementById('vf');
 
+voltbar.focus();
+
 function cal() {
     voltba = voltbar.value;
     amp = ampr.value;
@@ -17,3 +19,4 @@ function cal() {
     }
     ansar.textContent = ans;
 }
+
