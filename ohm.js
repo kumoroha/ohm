@@ -20,13 +20,12 @@ function cal() {
     } else if (amp == 0) {
         alert('アンペア数を確認してください。\n本当に0ですか？');
     } else {
-        amp = amp * 1000;
-        ans = (voltba - vf) / amp;
-        w = vf * amp;
+        ans = (voltba - vf) / (amp / 1000);
+        w = vf * amp * 1000;
         if (w < 0.15) {
-            mes = '1/4Wのカーボン抵抗で大丈夫です。';
+            mes = '一般的な1/4Wのカーボン抵抗で良いです。';
         } else {
-            mes = '1/2Wの金属皮膜抵抗やそれ以上の電気量に耐えられる抵抗をお勧めします。';
+            mes = '1/2Wの金属皮膜抵抗などやそれ以上の電気量に耐えられる抵抗にしてください。';
         }
     }
     ansar.textContent = `結果：${ans}Ω,${w}W　${mes}`;
@@ -41,4 +40,5 @@ ampr.addEventListener('input', (event) => {
 vfr.addEventListener('input', (event) => {
     cal();
 });
+
 
