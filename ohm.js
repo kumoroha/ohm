@@ -21,7 +21,7 @@ function cal() {
         alert('アンペア数を確認してください。\n本当に0ですか？');
     } else {
         ans = (voltba - vf) / (amp / 1000);
-        w = vf * amp * 1000;
+        w = vf * (amp / 1000);
         if (w < 0.15) {
             mes = '一般的な1/4Wのカーボン抵抗で良いです。';
         } else {
@@ -40,5 +40,6 @@ ampr.addEventListener('input', (event) => {
 vfr.addEventListener('input', (event) => {
     cal();
 });
+
 
 
