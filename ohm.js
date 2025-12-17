@@ -22,7 +22,8 @@ function cal() {
         ans = (voltba - vf) / amp;
         w = vf * amp;
     }
-    ansar.textContent = ans;
+    ansar.textContent = `結果：${ans}Ω,${w}W`;
 }
+
 
 
