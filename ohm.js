@@ -25,5 +25,9 @@ function cal() {
     ansar.textContent = `結果：${ans}Ω,${w}W`;
 }
 
-
-
+voltbar.addEventListener('input' ,(event) => {
+    cal();
+});
+ampr.addEventListenner('input', (event) => {
+    cal();
+});
