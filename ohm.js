@@ -24,11 +24,13 @@ function cal() {
         w = vf * (amp / 1000);
         if (w < 0.15) {
             mes = '一般的な1/4Wのカーボン抵抗で良いです。';
+        } else if (voltba < vf) {
+            mes = '<b>VF(順方向電圧)をよく確認してください。</b>';
         } else {
             mes = '1/2Wの金属皮膜抵抗などやそれ以上の電気量に耐えられる抵抗にしてください。';
         }
     }
-    ansar.textContent = `結果：${ans}Ω,${w}W　${mes}`;
+    ansar.innerHTML = `結果：${ans}Ω,${w}W　${mes}`;
 }
 
 voltbar.addEventListener('input' ,(event) => {
@@ -40,6 +42,7 @@ ampr.addEventListener('input', (event) => {
 vfr.addEventListener('input', (event) => {
     cal();
 });
+
 
 
 
