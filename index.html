@@ -15,20 +15,17 @@
         input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
         .result-box { margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 8px; border: 1px solid #bae6fd; font-size: 1em; line-height: 1.5; }
         .res-val { color: #0369a1; font-weight: bold; font-size: 1.25em; }
-        .hint { font-size: 0.8em; color: #94a3b8; margin-top: 4px; }
+        .safety-hint { color: #059669; font-size: 0.85em; font-weight: bold; margin-top: 5px; display: block; }
+        .warning { color: #dc2626; font-size: 0.9em; font-weight: bold; }
         .band-row { display: flex; gap: 4px; margin-top: 8px; }
         .band-select { flex: 1; height: 45px; border-radius: 6px; cursor: pointer; border: 1px solid #ccc; font-weight: bold; text-align: center; font-size: 0.8em; }
-        
         details { background: var(--card); margin-top: 30px; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
         summary { padding: 15px 20px; font-weight: bold; cursor: pointer; background: #e2e8f0; color: #1e293b; outline: none; }
         .details-content { padding: 20px; }
         .ascii-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .ascii-art { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; background: #1e293b; color: #00ff41; padding: 20px; border-radius: 8px; font-size: 0.85em; line-height: 1.2; overflow-x: auto; white-space: pre; }
-        .ascii-title { color: #fff; font-weight: bold; margin-bottom: 10px; display: block; text-decoration: underline; }
-        
-        .glossary { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; background: #fff; }
+        .glossary { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         .glossary th, .glossary td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
-        .glossary th { background: #f8fafc; color: var(--primary); width: 25%; }
     </style>
 </head>
 <body>
@@ -38,18 +35,18 @@
 
     <div class="grid">
         <div class="card">
-            <h2>1. LED抵抗設計</h2>
-            <div class="input-group"><label>電源電圧 (Vcc) [V]</label><input type="number" id="vcc" value="4.5" step="0.1" oninput="calc()"></div>
-            <div class="input-group"><label><input type="checkbox" id="use_drop" checked onchange="calc()" style="width:auto;"> ICドロップ考慮(-1.0V)</label></div>
+            <h2>1. LED抵抗設計 (安全優先)</h2>
+            <div class="input-group"><label>電源電圧 (Vcc) [V]</label><input type="number" id="vcc" value="5.0" step="0.1" oninput="calc()"></div>
+            <div class="input-group"><label><input type="checkbox" id="use_drop" onchange="calc()" style="width:auto;"> ICドロップ考慮 (NE555使用時等)</label></div>
             <div class="input-group"><label>LEDのVf [V]</label><input type="number" id="vf" value="3.1" step="0.1" oninput="calc()"></div>
-            <div class="input-group"><label>列数 (並列数)</label><input type="number" id="parallel" value="1" min="1" oninput="calc()"></div>
             <div class="input-group"><label>目標電流 [mA/列]</label><input type="number" id="target_ma" value="20" oninput="calc()"></div>
             <div class="result-box" id="res_led">---</div>
+            <span class="safety-hint">※焼き切れ防止のため、理論値より大きい近似値を選択します。</span>
         </div>
 
         <div class="card">
-            <h2>2. NE555 タイマー設定</h2>
-            <div class="input-group"><label>動作モード</label><select id="mode" onchange="calc()"><option value="astable">無安定 (点滅)</option><option value="mono">単安定 (ワンショット)</option></select></div>
+            <h2>2. 555 設定 (計算)</h2>
+            <div class="input-group"><label>動作モード</label><select id="mode" onchange="calc()"><option value="astable">無安定 (点滅)</option><option value="mono">単安定 (タイマー)</option></select></div>
             <div class="input-group"><label>コンデンサ [μF]</label><input type="number" id="c1" value="100" oninput="calc()"></div>
             <div class="input-group"><label>抵抗 RA [kΩ]</label><input type="number" id="ra" value="10" oninput="calc()"></div>
             <div id="rb_group" class="input-group"><label>抵抗 RB [kΩ]</label><input type="number" id="rb" value="47" oninput="calc()"></div>
@@ -57,7 +54,7 @@
         </div>
 
         <div class="card">
-            <h2>3. NE555 逆引き</h2>
+            <h2>3. 555 逆引き (抵抗算出)</h2>
             <div class="input-group"><label>【単安定】目標時間 [秒]</label><input type="number" id="target_sec" value="1.0" step="0.1" oninput="calc()"></div>
             <div class="result-box" id="res_mono_inv">---</div>
             <div class="input-group" style="margin-top:20px;"><label>【無安定】目標周波数 [Hz]</label><input type="number" id="target_hz" value="1.0" step="0.1" oninput="calc()"></div>
@@ -65,14 +62,7 @@
         </div>
 
         <div class="card">
-            <h2>4. 合成抵抗計算</h2>
-            <div class="input-group"><label>抵抗1 [Ω]</label><input type="number" id="comb_r1" value="100" oninput="calc()"></div>
-            <div class="input-group"><label>抵抗2 [Ω]</label><input type="number" id="comb_r2" value="100" oninput="calc()"></div>
-            <div class="result-box">直列: <span class="res-val" id="res_series">---</span> Ω<br>並列: <span class="res-val" id="res_parallel">---</span> Ω</div>
-        </div>
-
-        <div class="card">
-            <h2>5. 抵抗カラーコード解読 (4/5本対応)</h2>
+            <h2>5. 抵抗カラーコード (4/5本対応)</h2>
             <div class="input-group"><select id="res_type" onchange="toggleFifthBand();calc()"><option value="4">一般抵抗 (4本帯)</option><option value="5">精密抵抗 (5本帯)</option></select></div>
             <div class="band-row">
                 <select id="b1" class="band-select" onchange="updateBandColor(this);calc()"></select>
@@ -82,22 +72,24 @@
                 <select id="b4" class="band-select" onchange="updateBandColor(this);calc()"></select>
             </div>
             <div class="result-box" id="res_color">---</div>
-            <p class="hint" id="band_label">第1 | 第2 | 乗数 | 精度</p>
         </div>
 
         <div class="card">
-            <h2>6. 抵抗値から電流計算 (逆引き)</h2>
-            <div class="input-group"><label>使用する抵抗値 [Ω]</label><input type="number" id="r_stock" value="100" oninput="calc()"></div>
+            <h2>4. 合成 / 6. 電流逆引き</h2>
+            <div class="input-group"><label>並列抵抗1 [Ω]</label><input type="number" id="comb_r1" value="100" oninput="calc()"></div>
+            <div class="input-group"><label>並列抵抗2 [Ω]</label><input type="number" id="comb_r2" value="100" oninput="calc()"></div>
+            <div class="result-box">並列合成: <span class="res-val" id="res_parallel">---</span> Ω</div>
+            <div class="input-group" style="margin-top:20px;"><label>在庫抵抗 [Ω] → 流れる電流を計算</label><input type="number" id="r_stock" value="100" oninput="calc()"></div>
             <div class="result-box" id="res_stock_ma">---</div>
         </div>
     </div>
 
     <details>
-        <summary>💡 NE555 接続図 & 用語解説を表示</summary>
+        <summary>💡 NE555 / LMC555 接続図 & 用語解説</summary>
         <div class="details-content">
             <div class="ascii-grid">
                 <div class="ascii-art">
-<span class="ascii-title">【無安定：点滅モード】</span>
+<span style="color:#fff;font-weight:bold;">【無安定：点滅モード】</span>
         VCC (+)
          |
     +----+----+
@@ -106,45 +98,38 @@
     |         |
     +---(7)DISCH
     |         |
-   [RB]       |      NE555 ピン配置
+   [RB]       |      NE555 / LMC555
     |         |     +-------U-------+
     +---(6)THRESH  1| GND       VCC |8 --- VCC
     |         |    2| TRIG    DISCH |7 --- (RA-RB間)
     +---(2)TRIG    3| OUT    THRESH |6 --- (RB-C1間)
-    |              4| RESET    CONT |5 --- (103等でGNDへ推奨)
+    |              4| RESET    CONT |5 --- (103推奨)
    [C1]             +---------------+
     |                |
    GND (-)          (1)GND --- GND
                 </div>
                 <div class="ascii-art">
-<span class="ascii-title">【単安定：タイマーモード】</span>
+<span style="color:#fff;font-weight:bold;">【単安定：タイマーモード】</span>
         VCC (+)
          |
     +----+----+
     |         |
    [RA]      (8)VCC
     |         |
-    +---(7)DISCH    NE555 ピン配置
+    +---(7)DISCH    NE555 / LMC555
     |        |     +-------U-------+
     +---(6)THRESH  1| GND       VCC |8 --- VCC
     |              2| TRIG    DISCH |7 --- (RA下)
    [C1]            3| OUT    THRESH |6 --- (RA下)
     |              4| RESET    CONT |5
    GND (-)         +---------------+
-                    |
- (Pin2) TRIG 入力 --+  (GNDに落とすとタイマー開始)
                 </div>
             </div>
-            <h2>用語・略語の解説</h2>
             <table class="glossary">
-                <tr><th>GND (1)</th><td>グランド。電源のマイナス側。基準となる0Vです。</td></tr>
-                <tr><th>TRIG (2)</th><td>トリガー。2番ピンの電圧が電源の1/3以下になるとタイマーが始動します。</td></tr>
-                <tr><th>OUT (3)</th><td>出力。ここからLEDやスピーカーなどに信号（電流）を送ります。</td></tr>
-                <tr><th>RESET (4)</th><td>リセット。タイマーを強制停止します。使わない時はVCCに繋ぎます。</td></tr>
-                <tr><th>CONT (5)</th><td>コントロール。内部基準電圧。通常は0.01μF(103)のコンデンサを介してGNDへ。</td></tr>
-                <tr><th>THRESH (6)</th><td>スレッショルド。C1の電圧が電源の2/3を超えると出力をLにします。</td></tr>
-                <tr><th>DISCH (7)</th><td>ディスチャージ。コンデンサ(C1)の電気を放電（空に）するための通り道です。</td></tr>
-                <tr><th>VCC (8)</th><td>電源。電池のプラス側などを繋ぎます。</td></tr>
+                <tr><th>TRIG (2)</th><td>トリガー。1/3 VCC以下で開始。</td></tr>
+                <tr><th>OUT (3)</th><td>出力。最大200mA(NE) / 50mA(LMC)。</td></tr>
+                <tr><th>THRESH (6)</th><td>しきい値。2/3 VCC以上で終了。</td></tr>
+                <tr><th>DISCH (7)</th><td>放電。コンデンサの電気を抜く。</td></tr>
             </table>
         </div>
     </details>
@@ -159,6 +144,25 @@ const COLORS = [
     {n:"灰", v:8, m:null, c:"#808080", t:0.05}, {n:"白", v:9, m:null, c:"#fff", t:null},
     {n:"金", v:null, m:0.1, c:"#daa520", t:5}, {n:"銀", v:null, m:0.01, c:"#c0c0c0", t:10}
 ];
+
+// E24系列から「指定値より大きい、最小の抵抗」を探す関数
+function getSafeE24(val) {
+    const e24 = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
+    if (val <= 0 || !isFinite(val)) return 0;
+    const log10 = Math.floor(Math.log10(val));
+    const factor = Math.pow(10, log10);
+    const base = val / factor;
+    // base以上の最小値を検索。なければ次の桁の最小(1.0)
+    let nextBase = e24.find(e => e >= base);
+    if (!nextBase) return (1.0 * factor * 10).toFixed(0);
+    return (nextBase * factor).toFixed(nextBase * factor < 10 ? 1 : 0);
+}
+
+function formatResistor(val) {
+    if (val >= 1000000 && val % 1000000 === 0) return (val / 1000000) + "M";
+    if (val >= 1000) return (val / 1000).toFixed(1).replace(/\.0$/, '') + "k";
+    return Math.round(val);
+}
 
 function init() {
     ["b1", "b2", "b5", "b3", "b4"].forEach((id) => {
@@ -179,8 +183,7 @@ function init() {
 }
 
 function toggleFifthBand() {
-    const is5 = document.getElementById('res_type').value === "5";
-    document.getElementById('b5').style.display = is5 ? "block" : "none";
+    document.getElementById('b5').style.display = (document.getElementById('res_type').value === "5") ? "block" : "none";
 }
 
 function updateBandColor(el) {
@@ -189,61 +192,51 @@ function updateBandColor(el) {
     el.style.color = (v === 4 || v === 9 || v === 10 || v === 11) ? "black" : "white";
 }
 
-function getE24(val) {
-    const e24 = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
-    if (val <= 0 || !isFinite(val)) return 0;
-    const log10 = Math.floor(Math.log10(val));
-    const factor = Math.pow(10, log10);
-    const base = val / factor;
-    const closest = e24.reduce((prev, curr) => Math.abs(curr - base) < Math.abs(prev - base) ? curr : prev);
-    return (closest * factor).toFixed(1);
-}
-
-// 単位変換関数（MΩ対応）
-function formatResistor(val) {
-    if (val >= 1000000 && val % 1000000 === 0) {
-        return (val / 1000000) + "M";
-    } else if (val >= 1000) {
-        return (val / 1000).toFixed(1).replace(/\.0$/, '') + "k";
-    }
-    return Math.round(val);
-}
-
 function calc() {
+    const cVal = (parseFloat(document.getElementById('c1').value) || 0) / 1000000;
+    
+    // 1. LED設計
     const vcc = parseFloat(document.getElementById('vcc').value) || 0;
     const vf = parseFloat(document.getElementById('vf').value) || 0;
     const v_eff = vcc - (document.getElementById('use_drop').checked ? 1.0 : 0);
     const targetMa = parseFloat(document.getElementById('target_ma').value) || 0;
-
     if (v_eff > vf) {
         const r_ideal = (v_eff - vf) / (targetMa / 1000);
-        document.getElementById('res_led').innerHTML = `推奨抵抗: <span class="res-val">${Math.round(r_ideal)}</span> Ω (E24: ${getE24(r_ideal)}Ω)`;
+        document.getElementById('res_led').innerHTML = `理論値: ${Math.round(r_ideal)} Ω<br>近似値: <span class="res-val">${getSafeE24(r_ideal)}</span> Ω (E24上位)`;
     } else { document.getElementById('res_led').innerHTML = '<span class="warning">電圧不足</span>'; }
 
-    const mode = document.getElementById('mode').value;
-    const c = (parseFloat(document.getElementById('c1').value) || 0) / 1000000;
+    // 2. 555 順引き
     const ra = (parseFloat(document.getElementById('ra').value) || 0) * 1000;
     const rb = (parseFloat(document.getElementById('rb').value) || 0) * 1000;
-    document.getElementById('rb_group').style.display = (mode === 'astable') ? 'block' : 'none';
-    if(mode === 'mono') { document.getElementById('res_555').innerHTML = `タイマー: <span class="res-val">${(1.1 * ra * c).toFixed(2)}</span> 秒`; }
-    else { document.getElementById('res_555').innerHTML = `周波数: <span class="res-val">${(1.44 / ((ra + 2 * rb) * c)).toFixed(2)}</span> Hz`; }
+    if(document.getElementById('mode').value === 'mono') {
+        document.getElementById('rb_group').style.display = 'none';
+        document.getElementById('res_555').innerHTML = `タイマー: <span class="res-val">${(1.1 * ra * cVal).toFixed(2)}</span> 秒`;
+    } else {
+        document.getElementById('rb_group').style.display = 'block';
+        document.getElementById('res_555').innerHTML = `周波数: <span class="res-val">${(1.44 / ((ra + 2 * rb) * cVal)).toFixed(2)}</span> Hz`;
+    }
 
+    // 3. 555 逆引き
+    const targetSec = parseFloat(document.getElementById('target_sec').value) || 0;
+    const targetHz = parseFloat(document.getElementById('target_hz').value) || 0;
+    if(cVal > 0) {
+        document.getElementById('res_mono_inv').innerHTML = `必要 RA: <span class="res-val">${(targetSec / (1.1 * cVal) / 1000).toFixed(1)}</span> kΩ`;
+        const invRb = (1.44 / (targetHz * cVal) - 10000) / 2;
+        document.getElementById('res_astable_inv').innerHTML = invRb > 0 ? `必要 RB: <span class="res-val">${(invRb/1000).toFixed(1)}</span> kΩ` : '<span class="warning">不可</span>';
+    }
+
+    // 5. カラーコード
     const is5 = document.getElementById('res_type').value === "5";
-    let colorVal;
-    if(is5) { colorVal = (COLORS[document.getElementById('b1').value].v * 100 + COLORS[document.getElementById('b2').value].v * 10 + COLORS[document.getElementById('b5').value].v) * COLORS[document.getElementById('b3').value].m; }
-    else { colorVal = (COLORS[document.getElementById('b1').value].v * 10 + COLORS[document.getElementById('b2').value].v) * COLORS[document.getElementById('b3').value].m; }
-    
-    // 改良したフォーマット関数を適用
-    document.getElementById('res_color').innerHTML = `抵抗値: <span class="res-val">${formatResistor(colorVal)}</span> Ω <span class="hint">(±${COLORS[document.getElementById('b4').value].t}%)</span>`;
+    let colorVal = is5 ? (COLORS[document.getElementById('b1').value].v * 100 + COLORS[document.getElementById('b2').value].v * 10 + COLORS[document.getElementById('b5').value].v) * COLORS[document.getElementById('b3').value].m
+                       : (COLORS[document.getElementById('b1').value].v * 10 + COLORS[document.getElementById('b2').value].v) * COLORS[document.getElementById('b3').value].m;
+    document.getElementById('res_color').innerHTML = `抵抗値: <span class="res-val">${formatResistor(colorVal)}</span> Ω`;
 
-    const rStock = parseFloat(document.getElementById('r_stock').value) || 0;
-    const stockMa = (rStock > 0 && v_eff > vf) ? ((v_eff - vf) / rStock) * 1000 : 0;
-    document.getElementById('res_stock_ma').innerHTML = `予測電流: <span class="res-val">${stockMa.toFixed(1)}</span> mA/列`;
-
-    const cr1 = parseFloat(document.getElementById('comb_r1').value) || 0;
-    const cr2 = parseFloat(document.getElementById('comb_r2').value) || 0;
-    document.getElementById('res_series').innerText = Math.round(cr1 + cr2);
-    document.getElementById('res_parallel').innerText = cr1*cr2 ? Math.round((cr1*cr2)/(cr1+cr2)) : 0;
+    // 4 & 6
+    const r1 = parseFloat(document.getElementById('comb_r1').value) || 0;
+    const r2 = parseFloat(document.getElementById('comb_r2').value) || 0;
+    document.getElementById('res_parallel').innerText = r1*r2 ? Math.round((r1*r2)/(r1+r2)) : 0;
+    const rS = parseFloat(document.getElementById('r_stock').value) || 0;
+    document.getElementById('res_stock_ma').innerHTML = `予測電流: <span class="res-val">${(rS > 0 && v_eff > vf ? ((v_eff - vf) / rS) * 1000 : 0).toFixed(1)}</span> mA`;
 }
 init();
 </script>
