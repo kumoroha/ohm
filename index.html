@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>電子工作 究極コンパニオンツール</title>
+    <title>電子工作 計算ツール Pro</title>
     <style>
         :root { 
             --primary: #0284c7; --bg: #f1f5f9; --card: #ffffff; 
             --text: #233145; --border: #c2c8d0; --result-bg: #f0f9ff;
             --highlight: #22c55e; /* 回路図内の動的数値の色（緑） */
-            --label: #34445b;
+            --label: #24344b;
         }
         [data-theme="dark"] {
             --primary: #38bdf8; --bg: #0f172a; --card: #1e293b; 
@@ -21,13 +21,15 @@
             background: var(--bg); color: var(--text); padding: 20px; 
             transition: 0.3s; line-height: 1.5; 
             font-size: 17px; /* ★ここで全体の文字サイズを操作★ */
+            margin-top: 0; padding-top: 0;
         }
         .container { max-width: 1200px; margin: auto; }
-        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } }
         
         .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h1 { margin: 20px 0 20px 0; }
         h2 { font-size: 1.3em; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin: 0 0 15px 0; }
         label { display: block; font-size: 0.95em; font-weight: bold; color: var(--label); margin-bottom: 5px; }
         
@@ -39,14 +41,14 @@
         
         .result-box { padding: 15px; background: var(--result-bg); border-radius: 8px; border: 1px solid var(--primary); min-height: 40px; }
         .res-val { color: var(--primary); font-weight: bold; font-size: 1.4em; }
-        .theme-toggle { cursor: pointer; padding: 8px 16px; border-radius: 20px; border: 2px solid var(--primary); background: transparent; color: var(--primary); font-weight: bold; font-size: 0.8em; }
+        .theme-toggle { cursor: pointer; padding: 8px 16px; border-radius: 20px; border: 2px solid var(--primary); background: transparent; color: var(--primary); font-weight: bold; font-size: 0.85em; }
         
         .band-row { display: flex; gap: 6px; margin: 15px 0; }
         .band-select { flex: 1; height: 50px; border: 2px solid var(--border); }
         .existence-info { display: block; font-size: 0.75em; color: #ef4444; margin-top: 4px; font-weight: bold; height: 1.1em; }
 
         details { background: var(--card); margin-top: 30px; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
-        summary { padding: 15px 20px; font-weight: bold; cursor: pointer; background: var(--border); font-size: 1.1em; }
+        summary { padding: 15px 20px; font-weight: bold; cursor: pointer; background: #eeeeee; font-size: 1.1em; }
         .details-content { padding: 20px; }
         .ascii-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 20px; }
         .ascii-art { 
@@ -64,7 +66,7 @@
 
 <div class="container">
     <div class="header-area">
-        <h1>電子工作 究極コンパニオンツール</h1>
+        <h1>電子工作 計算ツール Pro</h1>
         <button class="theme-toggle" onclick="toggleTheme()">Dark / Light</button>
     </div>
 
@@ -83,7 +85,7 @@
         <div class="card">
             <h2>2. 555 タイマー計算</h2>
             <label>計算中のモード（下図で両方の解説が見れます）</label><select id="mode" onchange="calc()"><option value="astable">無安定 (点滅)</option><option value="mono">単安定 (タイマー)</option></select>
-            <label>コンデンサ C1 [μF] (容量が大きいほどゆっくり動きます)<a href="https://www.rubycon.co.jp/wp-content/uploads/catalog-aluminum/PK.pdf">PK</a>&nbsp;<a href="https://www.nichicon.co.jp/products/pdfs/vr.pdf">VR</a></label><input type="number" inputmode="decimal" id="c1" value="100" step="0.01" oninput="calc()">
+            <label>コンデンサ C1 [μF] (容量が大きいほどゆっくり動きます)&nbsp;<a href="https://www.rubycon.co.jp/wp-content/uploads/catalog-aluminum/PK.pdf">PK</a>&nbsp;&nbsp;<a href="https://www.nichicon.co.jp/products/pdfs/vr.pdf">VR</a></label><input type="number" inputmode="decimal" id="c1" value="100" step="0.01" oninput="calc()">
             <label>抵抗 RA [kΩ] (抵抗 RAも抵抗 RBも、1kΩ以上にしてください)</label><input type="number" inputmode="decimal" id="ra" value="1" step="0.1" oninput="calc()">
             <div id="rb_group"><label>抵抗 RB [kΩ] (抵抗 RAより圧倒的に大きくすると比が50%に近づきます)</label><input type="number" inputmode="decimal" id="rb" value="6.8" step="0.1" oninput="calc()"></div>
             <div class="result-box" id="res_555">---</div>
@@ -141,15 +143,15 @@
                     <div class="mode-info">
                         <b>【無安定モード】（ひたすら点滅）</b><br>
                         RAとRBを通ってコンデンサに電気が溜まるとOFF、RBを通って電気が抜けるとONになります。
-                        RBをRAより大きくすると、ONとOFFの時間が近くなり、きれいな点滅になります。
+                        RBをRAより大きくすると、ONとOFFの時間が近くなり、きれいな点滅になります。<a href="https://raw.githubusercontent.com/kumoroha/ele/refs/heads/main/pic/555_mu-antei.png">回路図</a>&emsp;<a href="https://raw.githubusercontent.com/kumoroha/ele/refs/heads/main/pic/555_mu-antei-bb.png">実装図</a>
                     </div>
-                    <div class="ascii-art" id="diag_astable"></div>
+                    <div class="ascii-art" id="diag_astable"><img src="lmc555.png"></img></div>
                 </div>
                 <div>
                     <div class="mode-info">
                         <b>【単安定モード】（タイマー）</b><br>
                         普段はOFFで、2番ピンのスイッチを「ポチッ」と押した瞬間だけONになります。
-                        時間が過ぎると勝手にOFFに戻ります。RAを大きくするとON時間が伸びます。
+                        時間が過ぎると勝手にOFFに戻ります。RAを大きくするとON時間が伸びます。<a href="https://raw.githubusercontent.com/kumoroha/ele/refs/heads/main/pic/555_tan-antei.png">回路図</a>&emsp;<a href="https://raw.githubusercontent.com/kumoroha/ele/refs/heads/main/pic/555_tan-antei-bb.png">実装図</a>
                     </div>
                     <div class="ascii-art" id="diag_mono"></div>
                 </div>
