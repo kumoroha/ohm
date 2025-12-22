@@ -8,11 +8,13 @@
             --primary: #0284c7; --bg: #f1f5f9; --card: #ffffff; 
             --text: #233145; --border: #e2e8f0; --result-bg: #f0f9ff;
             --highlight: #22c55e; /* 回路図内の動的数値の色（緑） */
+            --label: #34445b;
         }
         [data-theme="dark"] {
             --primary: #38bdf8; --bg: #0f172a; --card: #1e293b; 
             --text: #f1f5f9; --border: #334155; --result-bg: #1e3a8a;
             --highlight: #4ade80;
+            --label: #fafafa;
         }
         body { 
             font-family: 'Segoe UI', 'Meiryo', sans-serif; 
@@ -27,7 +29,7 @@
         
         .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         h2 { font-size: 1.2em; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin: 0 0 15px 0; }
-        label { display: block; font-size: 0.9em; font-weight: bold; color: #34445b; margin-bottom: 5px; }
+        label { display: block; font-size: 0.9em; font-weight: bold; color: var(--label); margin-bottom: 5px; }
         
         input, select { 
             width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; 
