@@ -66,6 +66,12 @@
         .glossary th, .glossary td { border: 1px solid var(--border); padding: 12px; font-size: 0.9em; }
         .mode-info { background: rgba(2, 132, 199, 0.05); padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 15px; font-size: 0.95em; }
         a { color: var(--text); } a:hover { color: #536175; }
+        
+        /* 並列計算用の追加スタイル */
+        .parallel-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .parallel-inputs div { text-align: center; }
+        .parallel-inputs label { font-size: 0.8em; }
+        .parallel-inputs input { margin-bottom: 5px; text-align: center; }
     </style>
 </head>
 <body data-theme="dark">
@@ -124,15 +130,20 @@
         </div>
 
         <div class="card">
-            <h2>4 & 6. 在庫 & 合成計算</h2>
-            <label>在庫の抵抗 [Ω] を使った時の電流 (電圧は、<a href="#header">上の1.</a> で設定してください)</label>
-            <input type="number" inputmode="decimal" id="r_stock" value="100" oninput="calc()">
-            <div class="result-box" id="res_stock_ma" style="margin-bottom:15px;">---</div>
-            <div style="display:flex; gap:5px;">
-                <div style="flex:1;"><label>並列 R1 [Ω]</label><input type="number" inputmode="decimal" id="comb_r1" value="100" oninput="calc()"></div>
-                <div style="flex:1;"><label>並列 R2 [Ω]</label><input type="number" inputmode="decimal" id="comb_r2" value="100" oninput="calc()"></div>
+            <h2>4 & 6. 並列合成抵抗計算</h2>
+            <label>使用する抵抗の数</label>
+            <select id="parallel_count" onchange="updateParallelInputs();calc()">
+                <option value="2">2列</option>
+                <option value="3">3列</option>
+                <option value="4">4列</option>
+                <option value="5">5列</option>
+            </select>
+            <div id="parallel_inputs_area" class="parallel-inputs">
+                </div>
+            <div class="result-box">
+                合成値: <span class="res-val" id="res_parallel">---</span> Ω
             </div>
-            <div class="result-box">合成値: <span class="res-val" id="res_parallel">---</span> Ω</div>
+            <p style="font-size: 0.8em; margin-top:10px; color:gray;">※空欄や0は計算から除外されます</p>
         </div>
 
         <div class="card">
@@ -214,14 +225,8 @@ const CAP_COMMON = [10, 15, 22, 33, 47, 68];
 function toggleTheme() {
     const b = document.body;
     const currentTheme = b.getAttribute('data-theme');
-    // 現在がdarkならlightへ、そうでなければdarkへ切り替え
     b.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
 }
-
-//function toggleTheme() {
-//    const b = document.body;
-//    b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-//}
 
 function numFix(num, digits=2) {
     if (!isFinite(num) || isNaN(num)) return "0";
@@ -247,7 +252,20 @@ function toggleFifthBand() {
     document.getElementById('b5').style.display = (document.getElementById('res_type').value === "5") ? "block" : "none";
 }
 
+// 並列入力欄の動的生成
+function updateParallelInputs() {
+    const count = parseInt(document.getElementById('parallel_count').value);
+    const area = document.getElementById('parallel_inputs_area');
+    area.innerHTML = '';
+    for (let i = 1; i <= count; i++) {
+        const div = document.createElement('div');
+        div.innerHTML = `<label>R${i} [Ω]</label><input type="number" id="pr${i}" value="100" oninput="calc()">`;
+        area.appendChild(div);
+    }
+}
+
 function init() {
+    updateParallelInputs();
     ["b1", "b2", "b5", "b3", "b4"].forEach(id => {
         const sel = document.getElementById(id);
         COLORS.forEach((c, i) => {
@@ -282,20 +300,9 @@ function calc() {
         document.getElementById('res_led').innerHTML = `推奨抵抗: <span class="res-val">${getSafeE24(ri)}</span> Ω <br><span style="font-size: 0.9em; margin: 10px 0px 10px 0px;">(計算上の理論値:<span style="font-size: 1.4em;"> ${numFix(ri,0)}</span> Ω)</span>`;
     } else { document.getElementById('res_led').innerText = "電圧不足"; }
 
-    // LED逆引き
-//    const rsRev = parseFloat(document.getElementById('r_stock_rev').value) || 0;
-//    if(rsRev > 0 && v_eff > vf) {
-//        const revMa = (v_eff - vf) / rsRev * 1000;
-//        document.getElementById('res_rev_ma').innerText = numFix(revMa, 1);
-//    } else {
-//        document.getElementById('res_rev_ma').innerText = "0";
-//    }
-
-// LED逆引きの修正
+    // LED逆引きの修正
     const rsRev = parseFloat(document.getElementById('r_stock_rev').value) || 0;
-    // v_eff は既に (vcc - ドロップ分) で計算済みの値を使用
     if(rsRev > 0 && v_eff > vf) {
-        // 電流(mA) = (有効電圧 - LED順方向電圧) / 抵抗値 * 1000
         const revMa = (v_eff - vf) / rsRev * 1000;
         document.getElementById('res_rev_ma').innerText = numFix(revMa, 1);
     } else {
@@ -314,41 +321,21 @@ function calc() {
     }
 
     // 555逆引き
-//    const targetVal = parseFloat(document.getElementById('target_val').value) || 1;
-//    const targetUnit = document.getElementById('target_unit').value;
-//    const raFix = parseFloat(document.getElementById('ra_fix').value) || 1;
-//    if(mode === 'astable') {
-//        const tHz = (targetUnit === 'hz') ? targetVal : 1/targetVal;
-//        const rbNeeded = ((1.44 / (tHz * cVal)) - (raFix * 1000)) / 2000;
-//        document.getElementById('res_555_rev').innerHTML = `必要 RB: <span class="res-val rev">${numFix(rbNeeded/1000, 2)}</span> kΩ<br>推奨(E24): <span class="res-val rev">${getSafeE24(rbNeeded)/1000}</span> kΩ`;
-//    } else {
-//        const tSec = (targetUnit === 'sec') ? targetVal : 1/targetVal;
-//        const raNeeded = tSec / (1.1 * cVal);
-//        document.getElementById('res_555_rev').innerHTML = `必要 RA: <span class="res-val rev">${numFix(raNeeded/1000, 2)}</span> kΩ`;
-//    }
-
-// 555逆引き
     const targetVal = parseFloat(document.getElementById('target_val').value) || 1;
     const targetUnit = document.getElementById('target_unit').value;
-    const raFix = parseFloat(document.getElementById('ra_fix').value) || 1; // kΩ
+    const raFix = parseFloat(document.getElementById('ra_fix').value) || 1; 
 
     if(mode === 'astable') {
-        // 無安定： f = 1.44 / ((RA + 2RB) * C)
-        // RB = ((1.44 / (f * C)) - RA) / 2
         const tHz = (targetUnit === 'hz') ? targetVal : 1 / targetVal;
         const rbNeeded_ohm = ((1.44 / (tHz * cVal)) - (raFix * 1000)) / 2;
         const rbNeeded_kohm = rbNeeded_ohm / 1000;
-        
         document.getElementById('res_555_rev').innerHTML = 
             `必要 RB: <span class="res-val rev">${numFix(rbNeeded_kohm, 2)}</span> kΩ<br>` +
             `推奨(E24): <span class="res-val rev">${getSafeE24(rbNeeded_ohm) / 1000}</span> kΩ`;
     } else {
-        // 単安定： T = 1.1 * RA * C
-        // RA = T / (1.1 * C)
         const tSec = (targetUnit === 'sec') ? targetVal : 1 / targetVal;
         const raNeeded_ohm = tSec / (1.1 * cVal);
         const raNeeded_kohm = raNeeded_ohm / 1000;
-        
         document.getElementById('res_555_rev').innerHTML = 
             `必要 RA: <span class="res-val rev">${numFix(raNeeded_kohm, 2)}</span> kΩ<br>` +
             `推奨(E24): <span class="res-val rev">${getSafeE24(raNeeded_ohm) / 1000}</span> kΩ`;
@@ -361,12 +348,14 @@ function calc() {
     document.getElementById('diag_astable').innerHTML = `【無安定：ずっと点滅】\n  VCC(+)\n    │\n    ├──┬───────┐\n    │  │       │\n [RA:${sRa}k]       │    (8)VCC\n    │  │       │\n    ├──┼──(7)DISCH\n    │  │       │\n [RB:${sRb}k]     │\n    │  │       │\n    ├─┬┴──(6)THRESH\n    │ │        │\n    │ └──(2)TRIG\n    │          │\n [C1:${sC1}μF]    └──(3)OUT ── [LED等]\n    │\n   GND`;
     document.getElementById('diag_mono').innerHTML = `【単安定：ワンショット】\n  VCC(+)\n    │\n    ├──┬───────┐\n    │  │       │\n [RA:${sRa}k]       │    (8)VCC\n    │  │       │\n    ├──┴──┬──(7)DISCH\n    │     └──(6)THRESH\n [C1:${sC1}μF]  (3)OUT ── [LED等]\n    │          │\n   GND    SW ─(2)TRIG\n               │\n              (1)GND`;
 
-    // 4 & 6 合成・在庫
-    const r1 = parseFloat(document.getElementById('comb_r1').value);
-    const r2 = parseFloat(document.getElementById('comb_r2').value);
-    document.getElementById('res_parallel').innerText = r1*r2 ? numFix((r1*r2)/(r1+r2), 1) : "0";
-    const rs = parseFloat(document.getElementById('r_stock').value);
-    document.getElementById('res_stock_ma').innerHTML = `電流: <span class="res-val">${rs>0 && v_eff>vf ? numFix((v_eff-vf)/rs*1000, 1) : "0"}</span> mA`;
+    // 4 & 6. 並列計算 (拡張対応)
+    let invSum = 0;
+    const count = parseInt(document.getElementById('parallel_count').value);
+    for (let i = 1; i <= count; i++) {
+        const val = parseFloat(document.getElementById('pr'+i).value);
+        if (val > 0) invSum += (1 / val);
+    }
+    document.getElementById('res_parallel').innerText = invSum > 0 ? numFix(1 / invSum, 1) : "---";
 
     // 5. カラーコード
     const resType = document.getElementById('res_type').value;
