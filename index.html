@@ -9,9 +9,10 @@
             --text: #233145; --border: #a2a8b0; --result-bg: #f0f9ff;
             --highlight: #32d56e; /* 回路図内の動的数値の色（緑） */
             --label: #14243b; --h1: #222222; --summary: #eeeeee;
+            --accent: #f59e0b; /* 逆引き用のアクセントカラー */
         }
         [data-theme="dark"] {
-            --primary: #38bdf8; --bg: #0f172a; --card: #1e293b; 
+            --primary: #38bdf8; --bg: #1a1a1a; --card: #1e293b; 
             --text: #f1f5f9; --border: #aaaaaa; --result-bg: #1e3a8a;
             --highlight: #4ade80;
             --label: #fafafa; --h1: #dddddd; --summary: #222222;
@@ -29,8 +30,10 @@
         @media (max-width: 850px) { .grid { grid-template-columns: 1fr; } }
         
         .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .card.reverse { border-top: 4px solid var(--accent); } /* 逆引き用カードの強調 */
         h1 { color: var(--h1); margin: 20px 0 20px 0; }
         h2 { font-size: 1.3em; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin: 0 0 15px 0; }
+        h2.rev-title { color: var(--accent); }
         label { display: block; font-size: 0.95em; font-weight: bold; color: var(--label); margin-bottom: 5px; }
         
         input, select { 
@@ -40,7 +43,9 @@
         }
         
         .result-box { padding: 15px; background: var(--result-bg); border-radius: 8px; border: 1px solid var(--primary); min-height: 40px; }
+        .result-box.reverse { border-color: var(--accent); }
         .res-val { color: var(--primary); font-weight: bold; font-size: 1.4em; }
+        .res-val.rev { color: var(--accent); }
         .theme-toggle { cursor: pointer; padding: 8px 16px; border-radius: 20px; border: 2px solid var(--primary); background: transparent; color: var(--primary); font-weight: bold; font-size: 0.85em; }
         
         .band-row { display: flex; gap: 6px; margin: 15px 0; }
@@ -63,24 +68,35 @@
         a { color: var(--text); } a:hover { color: #536175; }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="dark">
 
 <div class="container">
     <div class="header-area">
-        <h1>電子工作 計算ツール Pro</h1>
+        <h1 id="header">電子工作 計算ツール Pro</h1>
         <button class="theme-toggle" onclick="toggleTheme()">Dark / Light</button>
     </div>
 
     <div class="grid">
         <div class="card">
             <h2>1. LED抵抗計算</h2>
-            <label>電源電圧 (Vcc) [V]</label><input type="number" inputmode="decimal" id="vcc" value="5.0" step="0.1" oninput="calc()">
+            <label>電源電圧 (Vcc) [V]</label><input type="number" inputmode="decimal" id="vcc" value="4.5" step="0.1" oninput="calc()">
             <label><input type="checkbox" id="use_drop" onchange="calc()" style="height: 15px; width: 15px; margin-bottom:0;"> ICドロップ考慮 (555出力時は約1V低下します)</label>
             <div style="margin-top:15px;">
                 <label>LED 順方向電圧 (Vf) [V]</label><input type="number" inputmode="decimal" id="vf" value="3.1" step="0.1" oninput="calc()">
                 <label>目標電流 (If) [mA]</label><input type="number" inputmode="decimal" id="target_ma" value="15" oninput="calc()">
             </div>
             <div class="result-box" id="res_led">---</div>
+        </div>
+
+        <div class="card reverse">
+            <h2 class="rev-title">1-Rev. LED動作逆引き</h2>
+            <label>手持ちの抵抗値 [Ω]</label>
+            <input type="number" inputmode="decimal" id="r_stock_rev" value="100" oninput="calc()">
+            <div class="result-box reverse">
+                <div>流れる電流: <span class="res-val rev" id="res_rev_ma">---</span> mA</div>
+                <div style="font-size: 0.85em; margin-top:5px;">※左の1.で設定した電圧(Vcc, Vf)を基に計算します</div>
+            </div>
+            <p>計算結果の理論値+20%の余裕を持つべき。<br>DC4.5Vの場合、<br>3.1Vなら100Ω、<br>2.0Vなら200Ωくらいがよい。</p>
         </div>
 
         <div class="card">
@@ -92,9 +108,24 @@
             <div class="result-box" id="res_555">---</div>
         </div>
 
+        <div class="card reverse">
+            <h2 class="rev-title">2-Rev. 555逆引き (目標値から抵抗を決定)</h2>
+            <label>目標の数値 (例: 1Hzなら1.0)</label>
+            <div style="display:flex; gap:10px;">
+                <input type="number" inputmode="decimal" id="target_val" value="1.0" step="0.1" oninput="calc()" style="flex:2;">
+                <select id="target_unit" onchange="calc()" style="flex:1;">
+                    <option value="hz">Hz (回/秒)</option>
+                    <option value="sec">秒 (周期/ON)</option>
+                </select>
+            </div>
+            <label>固定する RA [kΩ]</label><input type="number" id="ra_fix" value="1" oninput="calc()">
+            <div class="result-box reverse" id="res_555_rev">---</div>
+            <p style="font-size: 0.85em;">※左の設定のコンデンサC1を使用して、必要な抵抗値を割り出します<br>&emsp;左側で計算モードをしっかり選択してください。結果が変わります。</p>
+        </div>
+
         <div class="card">
             <h2>4 & 6. 在庫 & 合成計算</h2>
-            <label>在庫の抵抗 [Ω] を使った時の電流 (電圧は、上の1. で設定してください)</label>
+            <label>在庫の抵抗 [Ω] を使った時の電流 (電圧は、<a href="#header">上の1.</a> で設定してください)</label>
             <input type="number" inputmode="decimal" id="r_stock" value="100" oninput="calc()">
             <div class="result-box" id="res_stock_ma" style="margin-bottom:15px;">---</div>
             <div style="display:flex; gap:5px;">
@@ -146,7 +177,7 @@
                         RAとRBを通ってコンデンサに電気が溜まるとOFF、RBを通って電気が抜けるとONになります。
                         RBをRAより大きくすると、ONとOFFの時間が近くなり、きれいな点滅になります。<a href="https://raw.githubusercontent.com/kumoroha/ele/refs/heads/main/pic/555_mu-antei.png">回路図</a>&emsp;<a href="https://raw.githubusercontent.com/kumoroha/ele/refs/heads/main/pic/555_mu-antei-bb.png">実装図</a>
                     </div>
-                    <div class="ascii-art" id="diag_astable"><img src="lmc555.png"></img></div>
+                    <div class="ascii-art" id="diag_astable"></div>
                 </div>
                 <div>
                     <div class="mode-info">
@@ -182,11 +213,18 @@ const CAP_COMMON = [10, 15, 22, 33, 47, 68];
 
 function toggleTheme() {
     const b = document.body;
-    b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    const currentTheme = b.getAttribute('data-theme');
+    // 現在がdarkならlightへ、そうでなければdarkへ切り替え
+    b.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
 }
 
+//function toggleTheme() {
+//    const b = document.body;
+//    b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+//}
+
 function numFix(num, digits=2) {
-    if (!isFinite(num)) return "0";
+    if (!isFinite(num) || isNaN(num)) return "0";
     return parseFloat(num.toFixed(digits)).toString();
 }
 
@@ -228,23 +266,43 @@ function init() {
 }
 
 function calc() {
+    const vcc = parseFloat(document.getElementById('vcc').value) || 0;
+    const vf = parseFloat(document.getElementById('vf').value) || 0;
+    const v_eff = vcc - (document.getElementById('use_drop').checked ? 1.0 : 0);
     const ra = parseFloat(document.getElementById('ra').value) || 0;
     const rb = parseFloat(document.getElementById('rb').value) || 0;
     const c1 = parseFloat(document.getElementById('c1').value) || 0;
-    const vcc = parseFloat(document.getElementById('vcc').value) || 0;
-    const vf = parseFloat(document.getElementById('vf').value) || 0;
     const mode = document.getElementById('mode').value;
-    const v_eff = vcc - (document.getElementById('use_drop').checked ? 1.0 : 0);
+    const cVal = c1 / 1000000;
 
-    // 1. LED
+    // 1. LED順引き
     const tMa = parseFloat(document.getElementById('target_ma').value) || 0;
     if(v_eff > vf && tMa > 0) {
         const ri = (v_eff - vf) / (tMa/1000);
         document.getElementById('res_led').innerHTML = `推奨抵抗: <span class="res-val">${getSafeE24(ri)}</span> Ω <br><span style="font-size: 0.9em; margin: 10px 0px 10px 0px;">(計算上の理論値:<span style="font-size: 1.4em;"> ${numFix(ri,0)}</span> Ω)</span>`;
     } else { document.getElementById('res_led').innerText = "電圧不足"; }
 
+    // LED逆引き
+//    const rsRev = parseFloat(document.getElementById('r_stock_rev').value) || 0;
+//    if(rsRev > 0 && v_eff > vf) {
+//        const revMa = (v_eff - vf) / rsRev * 1000;
+//        document.getElementById('res_rev_ma').innerText = numFix(revMa, 1);
+//    } else {
+//        document.getElementById('res_rev_ma').innerText = "0";
+//    }
+
+// LED逆引きの修正
+    const rsRev = parseFloat(document.getElementById('r_stock_rev').value) || 0;
+    // v_eff は既に (vcc - ドロップ分) で計算済みの値を使用
+    if(rsRev > 0 && v_eff > vf) {
+        // 電流(mA) = (有効電圧 - LED順方向電圧) / 抵抗値 * 1000
+        const revMa = (v_eff - vf) / rsRev * 1000;
+        document.getElementById('res_rev_ma').innerText = numFix(revMa, 1);
+    } else {
+        document.getElementById('res_rev_ma').innerText = "0";
+    }
+
     // 2. 555
-    const cVal = c1 / 1000000;
     if(mode === 'mono') {
         document.getElementById('rb_group').style.opacity = 0.3;
         document.getElementById('res_555').innerHTML = `タイマーON時間: <span class="res-val">${numFix(1.1 * ra * 1000 * cVal, 2)}</span> 秒`;
@@ -255,46 +313,62 @@ function calc() {
         document.getElementById('res_555').innerHTML = `発振周波数: <span class="res-val">${numFix(hz, 2)}</span> Hz<br><span style="font-size: 1.0em;">デューティ比 (ON時間): <span class="res-val" style="font-size:1.4em;">${numFix(duty, 1)}</span> %</span>`;
     }
 
-    // 回路図更新 (数値の色を変え、単位をμFに修正)
+    // 555逆引き
+//    const targetVal = parseFloat(document.getElementById('target_val').value) || 1;
+//    const targetUnit = document.getElementById('target_unit').value;
+//    const raFix = parseFloat(document.getElementById('ra_fix').value) || 1;
+//    if(mode === 'astable') {
+//        const tHz = (targetUnit === 'hz') ? targetVal : 1/targetVal;
+//        const rbNeeded = ((1.44 / (tHz * cVal)) - (raFix * 1000)) / 2000;
+//        document.getElementById('res_555_rev').innerHTML = `必要 RB: <span class="res-val rev">${numFix(rbNeeded/1000, 2)}</span> kΩ<br>推奨(E24): <span class="res-val rev">${getSafeE24(rbNeeded)/1000}</span> kΩ`;
+//    } else {
+//        const tSec = (targetUnit === 'sec') ? targetVal : 1/targetVal;
+//        const raNeeded = tSec / (1.1 * cVal);
+//        document.getElementById('res_555_rev').innerHTML = `必要 RA: <span class="res-val rev">${numFix(raNeeded/1000, 2)}</span> kΩ`;
+//    }
+
+// 555逆引き
+    const targetVal = parseFloat(document.getElementById('target_val').value) || 1;
+    const targetUnit = document.getElementById('target_unit').value;
+    const raFix = parseFloat(document.getElementById('ra_fix').value) || 1; // kΩ
+
+    if(mode === 'astable') {
+        // 無安定： f = 1.44 / ((RA + 2RB) * C)
+        // RB = ((1.44 / (f * C)) - RA) / 2
+        const tHz = (targetUnit === 'hz') ? targetVal : 1 / targetVal;
+        const rbNeeded_ohm = ((1.44 / (tHz * cVal)) - (raFix * 1000)) / 2;
+        const rbNeeded_kohm = rbNeeded_ohm / 1000;
+        
+        document.getElementById('res_555_rev').innerHTML = 
+            `必要 RB: <span class="res-val rev">${numFix(rbNeeded_kohm, 2)}</span> kΩ<br>` +
+            `推奨(E24): <span class="res-val rev">${getSafeE24(rbNeeded_ohm) / 1000}</span> kΩ`;
+    } else {
+        // 単安定： T = 1.1 * RA * C
+        // RA = T / (1.1 * C)
+        const tSec = (targetUnit === 'sec') ? targetVal : 1 / targetVal;
+        const raNeeded_ohm = tSec / (1.1 * cVal);
+        const raNeeded_kohm = raNeeded_ohm / 1000;
+        
+        document.getElementById('res_555_rev').innerHTML = 
+            `必要 RA: <span class="res-val rev">${numFix(raNeeded_kohm, 2)}</span> kΩ<br>` +
+            `推奨(E24): <span class="res-val rev">${getSafeE24(raNeeded_ohm) / 1000}</span> kΩ`;
+    }
+
+    // 回路図
     const sRa = `<span class="dyn-val">${numFix(ra,1)}</span>`;
     const sRb = `<span class="dyn-val">${numFix(rb,1)}</span>`;
     const sC1 = `<span class="dyn-val">${numFix(c1,1)}</span>`;
+    document.getElementById('diag_astable').innerHTML = `【無安定：ずっと点滅】\n  VCC(+)\n    │\n    ├──┬───────┐\n    │  │       │\n [RA:${sRa}k]       │    (8)VCC\n    │  │       │\n    ├──┼──(7)DISCH\n    │  │       │\n [RB:${sRb}k]     │\n    │  │       │\n    ├─┬┴──(6)THRESH\n    │ │        │\n    │ └──(2)TRIG\n    │          │\n [C1:${sC1}μF]    └──(3)OUT ── [LED等]\n    │\n   GND`;
+    document.getElementById('diag_mono').innerHTML = `【単安定：ワンショット】\n  VCC(+)\n    │\n    ├──┬───────┐\n    │  │       │\n [RA:${sRa}k]       │    (8)VCC\n    │  │       │\n    ├──┴──┬──(7)DISCH\n    │     └──(6)THRESH\n [C1:${sC1}μF]  (3)OUT ── [LED等]\n    │          │\n   GND    SW ─(2)TRIG\n               │\n              (1)GND`;
 
-    document.getElementById('diag_astable').innerHTML = `【無安定：ずっと点滅】
-  VCC(+)
-    │
-    ├──┬───────┐
-    │  │       │
- [RA:${sRa}k]       │    (8)VCC
-    │  │       │
-    ├──┼──(7)DISCH
-    │  │       │
- [RB:${sRb}k]     │
-    │  │       │
-    ├─┬┴──(6)THRESH
-    │ │        │
-    │ └──(2)TRIG
-    │          │
- [C1:${sC1}μF]    └──(3)OUT ── [LED等]
-    │
-   GND`;
+    // 4 & 6 合成・在庫
+    const r1 = parseFloat(document.getElementById('comb_r1').value);
+    const r2 = parseFloat(document.getElementById('comb_r2').value);
+    document.getElementById('res_parallel').innerText = r1*r2 ? numFix((r1*r2)/(r1+r2), 1) : "0";
+    const rs = parseFloat(document.getElementById('r_stock').value);
+    document.getElementById('res_stock_ma').innerHTML = `電流: <span class="res-val">${rs>0 && v_eff>vf ? numFix((v_eff-vf)/rs*1000, 1) : "0"}</span> mA`;
 
-    document.getElementById('diag_mono').innerHTML = `【単安定：ワンショット】
-  VCC(+)
-    │
-    ├──┬───────┐
-    │  │       │
- [RA:${sRa}k]       │    (8)VCC
-    │  │       │
-    ├──┴──┬──(7)DISCH
-    │     └──(6)THRESH
- [C1:${sC1}μF]  (3)OUT ── [LED等]
-    │          │
-   GND    SW ─(2)TRIG
-               │
-              (1)GND`;
-
-    // 5. 抵抗解読
+    // 5. カラーコード
     const resType = document.getElementById('res_type').value;
     const v1 = parseInt(COLORS[document.getElementById('b1').value].v);
     const v2 = parseInt(COLORS[document.getElementById('b2').value].v);
@@ -309,21 +383,11 @@ function calc() {
     document.getElementById('res_color').innerHTML = `${rv >= 1000 ? numFix(rv/1000, 2)+'k' : numFix(rv, 0)} Ω (±${COLORS[document.getElementById('b4').value].t}%)`;
     document.getElementById('existence_msg_res').innerText = E24.some(e => e.toFixed(1) === (sigRes / (resType==="5"?100:10)).toFixed(1)) ? "" : "（一般的ではない数値です）";
 
-    // 4 & 6 合成
-    const r1 = parseFloat(document.getElementById('comb_r1').value);
-    const r2 = parseFloat(document.getElementById('comb_r2').value);
-    document.getElementById('res_parallel').innerText = r1*r2 ? numFix((r1*r2)/(r1+r2), 1) : "0";
-    const rs = parseFloat(document.getElementById('r_stock').value);
-    document.getElementById('res_stock_ma').innerHTML = `電流: <span class="res-val">${rs>0 && v_eff>vf ? numFix((v_eff-vf)/rs*1000, 1) : "0"}</span> mA`;
-
     // 7. コンデンサ
     const cap = document.getElementById('cap_code').value;
     if(cap.length === 3) {
-        const c_sig = parseInt(cap.substring(0,2));
-        const c_exp = parseInt(cap.substring(2,3));
-        const pf = c_sig * Math.pow(10, c_exp);
-        const uf = pf / 1000000;
-        const nf = pf / 1000;
+        const c_sig = parseInt(cap.substring(0,2)), c_exp = parseInt(cap.substring(2,3));
+        const pf = c_sig * Math.pow(10, c_exp), uf = pf / 1000000, nf = pf / 1000;
         document.getElementById('res_cap').innerHTML = uf >= 0.1 ? numFix(uf, 3)+' μF' : (nf >= 0.1 ? numFix(nf, 1)+' nF' : pf+' pF');
         document.getElementById('existence_msg_cap').innerText = CAP_COMMON.includes(c_sig) ? "" : "（一般的ではない数値です）";
     }
